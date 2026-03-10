@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MacroLogic — Precision Nutrition</title>
+  <meta name="description" content="Calculate daily calories and macros with a clean, premium nutrition calculator." />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="brand-wrap">
+        <div class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <div>
+          <h1 class="brand-title">MacroLogic</h1>
+          <p class="brand-subtitle">Precision Nutrition</p>
+        </div>
+      </div>
+      <button class="icon-button" id="infoBtn" aria-label="About MacroLogic">i</button>
+    </header>
+
+    <section class="hero-card">
+      <div>
+        <span class="eyebrow">Macro Calculator</span>
+        <h2>Calculate calories and macros with clarity.</h2>
+        <p>
+          MacroLogic uses your body stats, activity level, and goal to estimate daily calories,
+          protein, carbs, and fats in a clean, easy-to-read format.
+        </p>
+      </div>
+      <div class="hero-points">
+        <div class="hero-pill">Metric + Imperial</div>
+        <div class="hero-pill">PDF Export</div>
+        <div class="hero-pill">Worldwide Use</div>
+      </div>
+    </section>
+
+    <main class="main-grid">
+      <section class="card form-card">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Inputs</p>
+            <h3>Your details</h3>
+          </div>
+        </div>
+
+        <form id="macroForm" novalidate>
+          <div class="form-section">
+            <label class="field-label">Unit system</label>
+            <div class="segmented" role="tablist" aria-label="Unit system">
+              <button type="button" class="segmented-btn active" data-unit="metric">Metric</button>
+              <button type="button" class="segmented-btn" data-unit="imperial">Imperial</button>
+            </div>
+          </div>
+
+          <div class="form-grid two-col">
+            <div class="field">
+              <label for="sex">Sex</label>
+              <select id="sex" name="sex" required>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="age">Age</label>
+              <input id="age" name="age" type="number" min="15" max="100" placeholder="28" required />
+            </div>
+          </div>
+
+          <div id="metricFields" class="form-grid two-col">
+            <div class="field">
+              <label for="heightCm">Height (cm)</label>
+              <input id="heightCm" name="heightCm" type="number" min="100" max="260" placeholder="180" required />
+            </div>
+
+            <div class="field">
+              <label for="weightKg">Weight (kg)</label>
+              <input id="weightKg" name="weightKg" type="number" min="35" max="300" step="0.1" placeholder="85" required />
+            </div>
+          </div>
+
+          <div id="imperialFields" class="form-grid three-col hidden">
+            <div class="field">
+              <label for="heightFt">Height (ft)</label>
+              <input id="heightFt" name="heightFt" type="number" min="3" max="8" placeholder="5" />
+            </div>
+
+            <div class="field">
+              <label for="heightIn">Height (in)</label>
+              <input id="heightIn" name="heightIn" type="number" min="0" max="11" placeholder="10" />
+            </div>
+
+            <div class="field">
+              <label for="weightLb">Weight (lb)</label>
+              <input id="weightLb" name="weightLb" type="number" min="80" max="660" step="0.1" placeholder="187" />
+            </div>
+          </div>
+
+          <div class="form-section">
+            <label class="field-label">Goal</label>
+            <div class="choice-grid">
+              <label class="choice-card active">
+                <input type="radio" name="goal" value="lose" checked />
+                <span>Lose Weight</span>
+              </label>
+              <label class="choice-card">
+                <input type="radio" name="goal" value="maintain" />
+                <span>Maintain</span>
+              </label>
+              <label class="choice-card">
+                <input type="radio" name="goal" value="gain" />
+                <span>Gain Muscle</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="field">
+              <label for="activity">Activity Level</label>
+              <select id="activity" name="activity" required>
+                <option value="1.2">Sedentary — little or no exercise</option>
+                <option value="1.375">Light Activity — 1 to 3 days/week</option>
+                <option value="1.55" selected>Moderate Exercise — 3 to 5 days/week</option>
+                <option value="1.725">Heavy Training — 6 to 7 days/week</option>
+                <option value="1.9">Athlete — twice daily or physical job</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="actions-row">
+            <button type="submit" class="primary-btn">Calculate Macros</button>
+            <button type="button" class="ghost-btn" id="resetBtn">Reset</button>
+          </div>
+          <p class="form-note">Results are estimates for informational use only and not medical advice.</p>
+        </form>
+      </section>
+
+      <section class="card results-card">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Results</p>
+            <h3>Your macro targets</h3>
+          </div>
+          <span class="status-badge" id="statusBadge">Ready</span>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+          <div class="empty-graphic">
+            <span></span><span></span><span></span>
+          </div>
+          <h4>Run your calculation</h4>
+          <p>Your calories, protein, carbs, fats, and summary notes will appear here.</p>
+        </div>
+
+        <div id="resultsContent" class="results-content hidden">
+          <div class="result-hero">
+            <div>
+              <p class="mini-label">Daily Calories</p>
+              <h2 id="caloriesValue">2400</h2>
+              <p id="goalSummary" class="support-text">To maintain weight</p>
+            </div>
+            <div class="result-stat">
+              <span class="mini-label">BMR</span>
+              <strong id="bmrValue">0</strong>
+            </div>
+          </div>
+
+          <div class="macro-bars">
+            <div class="macro-row protein">
+              <div class="macro-row-head">
+                <span>Protein</span>
+                <strong id="proteinValue">0g</strong>
+              </div>
+              <div class="progress"><div id="proteinBar"></div></div>
+            </div>
+            <div class="macro-row carbs">
+              <div class="macro-row-head">
+                <span>Carbs</span>
+                <strong id="carbsValue">0g</strong>
+              </div>
+              <div class="progress"><div id="carbsBar"></div></div>
+            </div>
+            <div class="macro-row fats">
+              <div class="macro-row-head">
+                <span>Fats</span>
+                <strong id="fatsValue">0g</strong>
+              </div>
+              <div class="progress"><div id="fatsBar"></div></div>
+            </div>
+          </div>
+
+          <div class="results-grid">
+            <article class="insight-card">
+              <p class="mini-label">Profile</p>
+              <h4 id="profileSummary">—</h4>
+              <p id="activitySummary" class="support-text">—</p>
+            </article>
+
+            <article class="insight-card">
+              <p class="mini-label">Macro split</p>
+              <h4 id="splitSummary">—</h4>
+              <p class="support-text">Based on your selected goal.</p>
+            </article>
+          </div>
+
+          <div class="tip-card">
+            <p class="mini-label">Guidance</p>
+            <p id="tipText">Use these values as a starting point and adjust based on progress over time.</p>
+          </div>
+
+          <div class="actions-row result-actions">
+            <button type="button" class="primary-btn" id="downloadPdfBtn">Download PDF</button>
+          </div>
+
+          <div class="support-card">
+            <p class="mini-label">Support MacroLogic</p>
+            <h4>Enjoying the calculator?</h4>
+            <p class="support-text">If MacroLogic helped you, you can support ongoing development here.</p>
+            <a class="support-button" href="https://buymeacoffee.com/macrologic" target="_blank" rel="noopener noreferrer">☕ Buy Me a Coffee</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>© 2026 MacroLogic</p>
+      <nav>
+        <a href="terms.html">Terms</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="disclaimer.html">Disclaimer</a>
+        <a href="https://buymeacoffee.com/macrologic" target="_blank" rel="noopener noreferrer">Support</a>
+      </nav>
+    </footer>
+  </div>
+
+  <div class="modal hidden" id="infoModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="modal"></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="modal-close" id="closeModalBtn" aria-label="Close">×</button>
+      <p class="section-kicker">About</p>
+      <h3 id="modalTitle">What MacroLogic does</h3>
+      <p>
+        MacroLogic estimates your daily calorie and macronutrient targets using your body stats,
+        activity level, and goal. It is designed to give you a clean starting point for planning meals,
+        tracking food, and reviewing progress.
+      </p>
+      <p>
+        The results are estimates for informational use only. They should be adjusted based on your
+        real-world progress and, where appropriate, guidance from a qualified professional.
+      </p>
+    </div>
+  </div>
+
+  <script src="js/calculator.js"></script>
+</body>
+</html>

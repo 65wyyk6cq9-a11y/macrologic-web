@@ -3,6 +3,39 @@ const state = {
   lastResult: null,
 };
 
+
+window.addEventListener('DOMContentLoaded', () => {
+  requestAnimationFrame(() => document.body.classList.add('is-loaded'));
+});
+
+function animateNumber(element, endValue, suffix = '', duration = 900) {
+  const mediaReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (mediaReduced) {
+    element.textContent = `${Math.round(endValue).toLocaleString()}${suffix}`;
+    return;
+  }
+
+  const startValue = Number(String(element.textContent).replace(/[^\d.-]/g, '')) || 0;
+  const startTime = performance.now();
+
+  function step(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = startValue + ((endValue - startValue) * eased);
+    element.textContent = `${Math.round(current).toLocaleString()}${suffix}`;
+    if (progress < 1) requestAnimationFrame(step);
+  }
+
+  requestAnimationFrame(step);
+}
+
+function animateMacroBar(element, pct) {
+  element.style.width = '0%';
+  requestAnimationFrame(() => {
+    element.style.width = `${pct}%`;
+  });
+}
+
 const unitButtons = document.querySelectorAll('.segmented-btn');
 const metricFields = document.getElementById('metricFields');
 const imperialFields = document.getElementById('imperialFields');
@@ -236,10 +269,10 @@ function updateResults(result, data) {
   resultsContent.classList.remove('hidden');
   statusBadge.textContent = 'Calculated';
 
-  document.getElementById('caloriesValue').textContent = result.calories.toLocaleString();
-  document.getElementById('proteinValue').textContent = `${result.protein}g`;
-  document.getElementById('carbsValue').textContent = `${result.carbs}g`;
-  document.getElementById('fatsValue').textContent = `${result.fats}g`;
+  animateNumber(document.getElementById('caloriesValue'), result.calories);
+  animateNumber(document.getElementById('proteinValue'), result.protein, 'g', 820);
+  animateNumber(document.getElementById('carbsValue'), result.carbs, 'g', 920);
+  animateNumber(document.getElementById('fatsValue'), result.fats, 'g', 980);
   document.getElementById('secondaryMetricLabel').textContent = result.secondaryMetricLabel;
   document.getElementById('secondaryMetricValue').textContent = result.secondaryMetricValue;
   document.getElementById('rangeSummary').textContent = result.rangeSummary;
@@ -254,9 +287,9 @@ function updateResults(result, data) {
   }
   document.getElementById('goalSummary').textContent = goalSummary;
 
-  document.getElementById('proteinBar').style.width = `${result.proteinPct}%`;
-  document.getElementById('carbsBar').style.width = `${result.carbPct}%`;
-  document.getElementById('fatsBar').style.width = `${result.fatPct}%`;
+  animateMacroBar(document.getElementById('proteinBar'), result.proteinPct);
+  animateMacroBar(document.getElementById('carbsBar'), result.carbPct);
+  animateMacroBar(document.getElementById('fatsBar'), result.fatPct);
 
   const profileUnitLabel = `${round(data.weightKg)}kg • ${round(data.heightCm)}cm • ${data.age}y`;
   document.getElementById('profileSummary').textContent = profileUnitLabel;
@@ -264,8 +297,14 @@ function updateResults(result, data) {
   document.getElementById('splitSummary').textContent = `${result.proteinPct}% P • ${result.carbPct}% C • ${result.fatPct}% F`;
   document.getElementById('tipText').textContent = `${goalTip[data.goal]} Estimated BMR: ${result.bmr.toLocaleString()} kcal.`;
 
+  const resultsCard = document.querySelector('.results-card');
+  resultsCard.classList.remove('flash');
+  void resultsCard.offsetWidth;
+  resultsCard.classList.add('flash');
+
   state.lastResult = { ...result, ...data };
 }
+
 
 function openModal() {
   infoModal.classList.remove('hidden');

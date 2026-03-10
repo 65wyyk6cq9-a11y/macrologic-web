@@ -590,3 +590,73 @@ select option { color: #0b172b; }
 .legal-footer a:hover {
   text-decoration: underline;
 }
+
+
+/* Motion */
+:root {
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 560ms var(--ease-premium), transform 560ms var(--ease-premium);
+  will-change: opacity, transform;
+}
+
+.reveal-up {
+  transform: translateY(18px);
+}
+
+.reveal-delay-1 { transition-delay: 90ms; }
+.reveal-delay-2 { transition-delay: 180ms; }
+.reveal-delay-3 { transition-delay: 270ms; }
+
+body.is-loaded .reveal {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.progress {
+  overflow: hidden;
+}
+
+.progress > div {
+  width: 0;
+  transition: width 900ms var(--ease-premium), filter 320ms ease;
+  will-change: width;
+}
+
+.result-hero h2,
+.result-stat strong,
+.macro-row-head strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.results-card.flash {
+  animation: resultPulse 520ms var(--ease-premium);
+}
+
+@keyframes resultPulse {
+  0% { box-shadow: 0 0 0 rgba(30, 123, 255, 0); }
+  35% { box-shadow: 0 18px 60px rgba(30, 123, 255, 0.18); }
+  100% { box-shadow: 0 0 0 rgba(30, 123, 255, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .progress > div,
+  .results-card.flash,
+  .primary-btn,
+  .ghost-btn,
+  .hero-pill,
+  .card {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+  }
+}

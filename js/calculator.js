@@ -16,17 +16,47 @@ const resultsContent = document.getElementById('resultsContent');
 const statusBadge = document.getElementById('statusBadge');
 const downloadPdfBtn = document.getElementById('downloadPdfBtn');
 const choiceCards = document.querySelectorAll('.choice-card');
-
-const goalText = {
-  lose: 'To support fat loss',
-  maintain: 'To maintain weight',
-  gain: 'To support muscle gain',
-};
+const cutIntensityWrap = document.getElementById('cutIntensityWrap');
 
 const goalTip = {
-  lose: 'Aim to keep protein high, monitor weekly scale trends, and adjust calories if progress stalls for multiple weeks.',
-  maintain: 'Use this target as a baseline and adjust slightly if weight trends up or down over time.',
-  gain: 'Prioritize consistent protein intake, progressive training, and monitor bodyweight changes weekly.',
+  lose: 'Use the recommended cut target as your starting point, then review weekly bodyweight trend, training performance, appetite, and recovery before adjusting.',
+  maintain: 'Use this target as a maintenance baseline and monitor weekly scale trends to confirm it matches your real-world output.',
+  gain: 'Aim for steady performance, recovery, and gradual bodyweight increases rather than forcing the highest possible surplus.',
+};
+
+const trainingMap = {
+  '0': { label: 'No structured training', mult: 1.00 },
+  '1': { label: 'Light training — 1 to 2 days/week', mult: 1.08 },
+  '2': { label: 'Moderate training — 3 to 4 days/week', mult: 1.15 },
+  '3': { label: 'Heavy training — 6 to 7 days/week', mult: 1.22 },
+  '4': { label: 'Athlete — twice daily / very high volume', mult: 1.30 },
+};
+
+const lifestyleMap = {
+  '0': { label: 'Desk / mostly sitting', mult: 1.08 },
+  '1': { label: 'Mixed movement', mult: 1.16 },
+  '2': { label: 'Active job', mult: 1.24 },
+  '3': { label: 'Highly physical work', mult: 1.32 },
+};
+
+const stepsMap = {
+  '0': { label: 'Under 4,000', mult: 0.97 },
+  '1': { label: '4,000 – 7,000', mult: 1.00 },
+  '2': { label: '7,000 – 10,000', mult: 1.04 },
+  '3': { label: '10,000 – 14,000', mult: 1.08 },
+  '4': { label: '14,000+', mult: 1.12 },
+};
+
+const cutMap = {
+  conservative: { label: 'Conservative cut', mult: 0.90 },
+  moderate: { label: 'Moderate cut', mult: 0.83 },
+  aggressive: { label: 'Aggressive cut', mult: 0.76 },
+};
+
+const goalLabels = {
+  lose: 'Lose Weight',
+  maintain: 'Maintain Weight',
+  gain: 'Gain Muscle',
 };
 
 unitButtons.forEach((btn) => {
@@ -37,6 +67,7 @@ choiceCards.forEach((card) => {
   card.addEventListener('click', () => {
     choiceCards.forEach((c) => c.classList.remove('active'));
     card.classList.add('active');
+    toggleCutIntensity();
   });
 });
 
@@ -55,6 +86,11 @@ function setUnitSystem(unit) {
   document.getElementById('weightLb').required = !metricActive;
 }
 
+function toggleCutIntensity() {
+  const goal = form.querySelector('input[name="goal"]:checked').value;
+  cutIntensityWrap.classList.toggle('hidden', goal !== 'lose');
+}
+
 function kgFromLb(lb) {
   return lb * 0.45359237;
 }
@@ -70,8 +106,11 @@ function round(value) {
 function getFormData() {
   const sex = document.getElementById('sex').value;
   const age = parseInt(document.getElementById('age').value, 10);
-  const activityFactor = parseFloat(document.getElementById('activity').value);
   const goal = form.querySelector('input[name="goal"]:checked').value;
+  const trainingFrequency = document.getElementById('trainingFrequency').value;
+  const lifestyleActivity = document.getElementById('lifestyleActivity').value;
+  const dailySteps = document.getElementById('dailySteps').value;
+  const cutIntensity = document.getElementById('cutIntensity').value;
 
   let heightCm;
   let weightKg;
@@ -88,7 +127,7 @@ function getFormData() {
     weightKg = kgFromLb(pounds);
   }
 
-  return { sex, age, activityFactor, goal, heightCm, weightKg };
+  return { sex, age, goal, trainingFrequency, lifestyleActivity, dailySteps, cutIntensity, heightCm, weightKg };
 }
 
 function validateData(data) {
@@ -104,48 +143,91 @@ function validateData(data) {
   return null;
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
 function calculateMacros(data) {
   const bmr = data.sex === 'male'
     ? (10 * data.weightKg) + (6.25 * data.heightCm) - (5 * data.age) + 5
     : (10 * data.weightKg) + (6.25 * data.heightCm) - (5 * data.age) - 161;
 
-  const tdee = bmr * data.activityFactor;
+  const trainingMult = trainingMap[data.trainingFrequency].mult;
+  const lifestyleMult = lifestyleMap[data.lifestyleActivity].mult;
+  const stepsMult = stepsMap[data.dailySteps].mult;
 
-  const calorieAdjustments = {
-    lose: -450,
-    maintain: 0,
-    gain: 300,
-  };
+  const maintenance = bmr * trainingMult * lifestyleMult * stepsMult;
 
-  const calories = Math.max(1200, tdee + calorieAdjustments[data.goal]);
-
-  let proteinGrams;
-  let fatGrams;
+  let targetCalories = maintenance;
+  let secondaryMetricLabel = 'Maintenance';
+  let secondaryMetricValue = `${round(maintenance).toLocaleString()} kcal`;
+  let rangeSummary = 'Based on your selected goal.';
 
   if (data.goal === 'lose') {
-    proteinGrams = data.weightKg * 2.2;
-    fatGrams = data.weightKg * 0.8;
+    const selectedCut = maintenance * cutMap[data.cutIntensity].mult;
+    const conservative = maintenance * cutMap.conservative.mult;
+    const moderate = maintenance * cutMap.moderate.mult;
+    const aggressive = maintenance * cutMap.aggressive.mult;
+    targetCalories = selectedCut;
+    secondaryMetricLabel = 'Maintenance';
+    secondaryMetricValue = `${round(maintenance).toLocaleString()} kcal`;
+    rangeSummary = `Cut options: ${round(conservative).toLocaleString()} / ${round(moderate).toLocaleString()} / ${round(aggressive).toLocaleString()} kcal`;
   } else if (data.goal === 'gain') {
-    proteinGrams = data.weightKg * 2.0;
-    fatGrams = data.weightKg * 0.9;
-  } else {
-    proteinGrams = data.weightKg * 1.9;
-    fatGrams = data.weightKg * 0.85;
+    targetCalories = maintenance + Math.min(350, maintenance * 0.10);
+    secondaryMetricLabel = 'Maintenance';
+    secondaryMetricValue = `${round(maintenance).toLocaleString()} kcal`;
+    rangeSummary = 'Lean surplus target based on estimated maintenance.';
   }
 
+  let proteinPerKg = 1.9;
+  let fatPerKg = 0.8;
+
+  if (data.goal === 'lose') {
+    proteinPerKg = data.cutIntensity === 'aggressive' ? 2.3 : data.cutIntensity === 'moderate' ? 2.2 : 2.0;
+    fatPerKg = data.cutIntensity === 'aggressive' ? 0.65 : data.cutIntensity === 'moderate' ? 0.7 : 0.8;
+  } else if (data.goal === 'gain') {
+    proteinPerKg = 1.9;
+    fatPerKg = 0.85;
+  } else {
+    proteinPerKg = 1.95;
+    fatPerKg = 0.8;
+  }
+
+  let proteinGrams = data.weightKg * proteinPerKg;
+  let fatGrams = data.weightKg * fatPerKg;
   const proteinCalories = proteinGrams * 4;
   const fatCalories = fatGrams * 9;
-  const carbCalories = Math.max(0, calories - proteinCalories - fatCalories);
-  const carbGrams = carbCalories / 4;
+  let carbCalories = targetCalories - proteinCalories - fatCalories;
 
-  const finalCalories = (round(proteinGrams) * 4) + (round(fatGrams) * 9) + (round(carbGrams) * 4);
+  if (carbCalories < 0) {
+    fatGrams = Math.max(0.55 * data.weightKg, (targetCalories - proteinCalories) / 9);
+    carbCalories = targetCalories - proteinCalories - (fatGrams * 9);
+  }
+
+  const carbGrams = Math.max(0, carbCalories / 4);
+
+  const protein = round(proteinGrams);
+  const fats = round(fatGrams);
+  const carbs = round(carbGrams);
+  const calories = (protein * 4) + (fats * 9) + (carbs * 4);
+
+  const proteinPct = clamp(round((protein * 4 / calories) * 100), 0, 100);
+  const carbPct = clamp(round((carbs * 4 / calories) * 100), 0, 100);
+  const fatPct = clamp(round((fats * 9 / calories) * 100), 0, 100);
 
   return {
-    calories: round(finalCalories),
+    calories,
+    maintenance: round(maintenance),
     bmr: round(bmr),
-    protein: round(proteinGrams),
-    carbs: round(carbGrams),
-    fats: round(fatGrams),
+    protein,
+    carbs,
+    fats,
+    proteinPct,
+    carbPct,
+    fatPct,
+    secondaryMetricLabel,
+    secondaryMetricValue,
+    rangeSummary,
   };
 }
 
@@ -155,27 +237,34 @@ function updateResults(result, data) {
   statusBadge.textContent = 'Calculated';
 
   document.getElementById('caloriesValue').textContent = result.calories.toLocaleString();
-  document.getElementById('bmrValue').textContent = `${result.bmr} kcal`;
-  document.getElementById('goalSummary').textContent = goalText[data.goal];
   document.getElementById('proteinValue').textContent = `${result.protein}g`;
   document.getElementById('carbsValue').textContent = `${result.carbs}g`;
   document.getElementById('fatsValue').textContent = `${result.fats}g`;
+  document.getElementById('secondaryMetricLabel').textContent = result.secondaryMetricLabel;
+  document.getElementById('secondaryMetricValue').textContent = result.secondaryMetricValue;
+  document.getElementById('rangeSummary').textContent = result.rangeSummary;
 
-  const totalMacroGrams = result.protein + result.carbs + result.fats;
-  document.getElementById('proteinBar').style.width = `${(result.protein / totalMacroGrams) * 100}%`;
-  document.getElementById('carbsBar').style.width = `${(result.carbs / totalMacroGrams) * 100}%`;
-  document.getElementById('fatsBar').style.width = `${(result.fats / totalMacroGrams) * 100}%`;
+  let goalSummary = 'Recommended starting calories';
+  if (data.goal === 'lose') {
+    goalSummary = `${cutMap[data.cutIntensity].label} target for fat loss`;
+  } else if (data.goal === 'maintain') {
+    goalSummary = 'Estimated maintenance calories';
+  } else if (data.goal === 'gain') {
+    goalSummary = 'Lean gain calorie target';
+  }
+  document.getElementById('goalSummary').textContent = goalSummary;
 
-  document.getElementById('profileSummary').textContent = `${round(data.weightKg)}kg • ${round(data.heightCm)}cm • ${data.age}y`;
-  document.getElementById('activitySummary').textContent = document.getElementById('activity').selectedOptions[0].textContent;
+  document.getElementById('proteinBar').style.width = `${result.proteinPct}%`;
+  document.getElementById('carbsBar').style.width = `${result.carbPct}%`;
+  document.getElementById('fatsBar').style.width = `${result.fatPct}%`;
 
-  const proteinPct = round((result.protein * 4 / result.calories) * 100);
-  const carbPct = round((result.carbs * 4 / result.calories) * 100);
-  const fatPct = round((result.fats * 9 / result.calories) * 100);
-  document.getElementById('splitSummary').textContent = `${proteinPct}% P • ${carbPct}% C • ${fatPct}% F`;
-  document.getElementById('tipText').textContent = goalTip[data.goal];
+  const profileUnitLabel = `${round(data.weightKg)}kg • ${round(data.heightCm)}cm • ${data.age}y`;
+  document.getElementById('profileSummary').textContent = profileUnitLabel;
+  document.getElementById('activitySummary').textContent = `${trainingMap[data.trainingFrequency].label} • ${lifestyleMap[data.lifestyleActivity].label} • ${stepsMap[data.dailySteps].label} steps`;
+  document.getElementById('splitSummary').textContent = `${result.proteinPct}% P • ${result.carbPct}% C • ${result.fatPct}% F`;
+  document.getElementById('tipText').textContent = `${goalTip[data.goal]} Estimated BMR: ${result.bmr.toLocaleString()} kcal.`;
 
-  state.lastResult = { ...result, ...data, proteinPct, carbPct, fatPct };
+  state.lastResult = { ...result, ...data };
 }
 
 function openModal() {
@@ -209,7 +298,11 @@ resetBtn.addEventListener('click', () => {
   choiceCards.forEach((c) => c.classList.remove('active'));
   choiceCards[0].classList.add('active');
   document.querySelector('input[name="goal"][value="lose"]').checked = true;
-  document.getElementById('activity').value = '1.55';
+  document.getElementById('trainingFrequency').value = '3';
+  document.getElementById('lifestyleActivity').value = '1';
+  document.getElementById('dailySteps').value = '2';
+  document.getElementById('cutIntensity').value = 'moderate';
+  toggleCutIntensity();
   statusBadge.textContent = 'Ready';
   resultsContent.classList.add('hidden');
   emptyState.classList.remove('hidden');
@@ -226,12 +319,6 @@ window.addEventListener('keydown', (event) => {
 });
 
 function buildPdfHtml(result) {
-  const goalLabels = {
-    lose: 'Lose Weight',
-    maintain: 'Maintain Weight',
-    gain: 'Gain Muscle',
-  };
-
   return `<!DOCTYPE html>
   <html lang="en">
   <head>
@@ -266,6 +353,7 @@ function buildPdfHtml(result) {
       .fats { background: linear-gradient(90deg, #6b7e9b, #a6b7ce); width:${result.fatPct}%; }
       .tips { margin-top:22px; background:#eff6ff; border-radius:18px; padding:18px; }
       .footer { margin-top:22px; color:#6a86a5; font-size:14px; display:flex; justify-content:space-between; gap:12px; }
+      .meta { display:grid; gap:8px; margin-top:18px; color:#58738f; }
       @media print { .page { padding: 0; } body { background: white; } .card { box-shadow: none; } }
     </style>
   </head>
@@ -290,8 +378,8 @@ function buildPdfHtml(result) {
             <p style="opacity:.86;">${goalLabels[result.goal]}</p>
           </div>
           <div style="text-align:right; align-self:end;">
-            <p style="text-transform:uppercase; letter-spacing:.14em; font-size:12px; opacity:.8;">Estimated BMR</p>
-            <h3 style="font-size:28px; margin-top:8px;">${result.bmr} kcal</h3>
+            <p style="text-transform:uppercase; letter-spacing:.14em; font-size:12px; opacity:.8;">Maintenance</p>
+            <h3 style="font-size:28px; margin-top:8px;">${result.maintenance.toLocaleString()} kcal</h3>
           </div>
         </div>
 
@@ -299,6 +387,14 @@ function buildPdfHtml(result) {
           <div class="tile"><h3>Protein</h3><strong>${result.protein}g</strong></div>
           <div class="tile"><h3>Carbs</h3><strong>${result.carbs}g</strong></div>
           <div class="tile"><h3>Fats</h3><strong>${result.fats}g</strong></div>
+        </div>
+
+        <div class="meta">
+          <div><strong>Profile:</strong> ${Math.round(result.weightKg)}kg • ${Math.round(result.heightCm)}cm • ${result.age} years</div>
+          <div><strong>Training:</strong> ${trainingMap[result.trainingFrequency].label}</div>
+          <div><strong>Lifestyle:</strong> ${lifestyleMap[result.lifestyleActivity].label}</div>
+          <div><strong>Daily Steps:</strong> ${stepsMap[result.dailySteps].label}</div>
+          ${result.goal === 'lose' ? `<div><strong>Cut Intensity:</strong> ${cutMap[result.cutIntensity].label}</div>` : ''}
         </div>
 
         <div class="bars">
@@ -309,11 +405,11 @@ function buildPdfHtml(result) {
 
         <div class="tips">
           <p style="text-transform:uppercase; letter-spacing:.14em; font-size:12px; color:#3971ae; margin-bottom:10px;">Guidance</p>
-          <p class="muted" style="line-height:1.7;">This report provides estimated calorie and macro targets based on your inputs. Use it as a starting point, then review your bodyweight trend, training performance, appetite, and recovery over time before making changes.</p>
+          <p class="muted" style="line-height:1.7;">${goalTip[result.goal]} Estimated BMR: ${result.bmr.toLocaleString()} kcal. Maintenance estimate: ${result.maintenance.toLocaleString()} kcal.</p>
         </div>
 
         <div class="footer">
-          <span>Profile: ${Math.round(result.weightKg)}kg • ${Math.round(result.heightCm)}cm • ${result.age} years</span>
+          <span>${result.rangeSummary}</span>
           <span>Generated by MacroLogic</span>
         </div>
       </div>
@@ -337,3 +433,4 @@ downloadPdfBtn.addEventListener('click', () => {
 });
 
 setUnitSystem('metric');
+toggleCutIntensity();

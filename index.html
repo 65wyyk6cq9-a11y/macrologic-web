@@ -31,8 +31,8 @@
         <span class="eyebrow">Macro Calculator</span>
         <h2>Calculate calories and macros with clarity.</h2>
         <p>
-          MacroLogic uses your body stats, activity level, and goal to estimate daily calories,
-          protein, carbs, and fats in a clean, easy-to-read format.
+          MacroLogic uses your body stats, training, lifestyle activity, daily steps, and goal
+          to estimate calories and macros in a cleaner, more realistic way.
         </p>
       </div>
       <div class="hero-points">
@@ -124,13 +124,47 @@
 
           <div class="form-section">
             <div class="field">
-              <label for="activity">Activity Level</label>
-              <select id="activity" name="activity" required>
-                <option value="1.2">Sedentary — little or no exercise</option>
-                <option value="1.375">Light Activity — 1 to 3 days/week</option>
-                <option value="1.55" selected>Moderate Exercise — 3 to 5 days/week</option>
-                <option value="1.725">Heavy Training — 6 to 7 days/week</option>
-                <option value="1.9">Athlete — twice daily or physical job</option>
+              <label for="trainingFrequency">Training Frequency</label>
+              <select id="trainingFrequency" name="trainingFrequency" required>
+                <option value="0">No structured training</option>
+                <option value="1">Light training — 1 to 2 days/week</option>
+                <option value="2">Moderate training — 3 to 4 days/week</option>
+                <option value="3" selected>Heavy training — 6 to 7 days/week</option>
+                <option value="4">Athlete — twice daily / very high volume</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid two-col">
+            <div class="field">
+              <label for="lifestyleActivity">Lifestyle Activity</label>
+              <select id="lifestyleActivity" name="lifestyleActivity" required>
+                <option value="0">Desk / mostly sitting</option>
+                <option value="1" selected>Mixed movement</option>
+                <option value="2">Active job</option>
+                <option value="3">Highly physical work</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="dailySteps">Daily Steps</label>
+              <select id="dailySteps" name="dailySteps" required>
+                <option value="0">Under 4,000</option>
+                <option value="1">4,000 – 7,000</option>
+                <option value="2" selected>7,000 – 10,000</option>
+                <option value="3">10,000 – 14,000</option>
+                <option value="4">14,000+</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-section" id="cutIntensityWrap">
+            <div class="field">
+              <label for="cutIntensity">Cut Intensity</label>
+              <select id="cutIntensity" name="cutIntensity">
+                <option value="conservative">Conservative cut</option>
+                <option value="moderate" selected>Moderate cut</option>
+                <option value="aggressive">Aggressive cut</option>
               </select>
             </div>
           </div>
@@ -165,11 +199,11 @@
             <div>
               <p class="mini-label">Daily Calories</p>
               <h2 id="caloriesValue">2400</h2>
-              <p id="goalSummary" class="support-text">To maintain weight</p>
+              <p id="goalSummary" class="support-text">Recommended starting calories</p>
             </div>
             <div class="result-stat">
-              <span class="mini-label">BMR</span>
-              <strong id="bmrValue">0</strong>
+              <span class="mini-label" id="secondaryMetricLabel">Maintenance</span>
+              <strong id="secondaryMetricValue">0 kcal</strong>
             </div>
           </div>
 
@@ -207,7 +241,7 @@
             <article class="insight-card">
               <p class="mini-label">Macro split</p>
               <h4 id="splitSummary">—</h4>
-              <p class="support-text">Based on your selected goal.</p>
+              <p id="rangeSummary" class="support-text">Based on your selected goal.</p>
             </article>
           </div>
 
@@ -248,13 +282,13 @@
       <p class="section-kicker">About</p>
       <h3 id="modalTitle">What MacroLogic does</h3>
       <p>
-        MacroLogic estimates your daily calorie and macronutrient targets using your body stats,
-        activity level, and goal. It is designed to give you a clean starting point for planning meals,
-        tracking food, and reviewing progress.
+        MacroLogic estimates calorie and macro targets using your body stats, training frequency,
+        daily movement, steps, and goal. It is designed to be faster than a full questionnaire,
+        while still being more realistic than a basic one-size-fits-all calculator.
       </p>
       <p>
-        The results are estimates for informational use only. They should be adjusted based on your
-        real-world progress and, where appropriate, guidance from a qualified professional.
+        Results are for informational purposes only and should be adjusted based on progress,
+        recovery, performance, and professional guidance where needed.
       </p>
     </div>
   </div>

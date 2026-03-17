@@ -1,0 +1,20 @@
+{
+  "name": "macrologic-web",
+  "version": "1.0.0",
+  "description": "MacroLogic - Precision Nutrition Calculator",
+  "type": "module",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'Static site - no build needed'",
+    "lint": "echo 'No linter configured'"
+  },
+  "keywords": [
+    "nutrition",
+    "macro",
+    "calculator"
+  ],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@vercel/speed-insights": "^1.0.14"
+  }
+}

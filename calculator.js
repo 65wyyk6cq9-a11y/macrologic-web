@@ -14,8 +14,7 @@ function animateNumber(element, endValue, suffix = '', duration = 900) {
     return;
   }
 
-  const startValue = Number(String(element.textContent).replace(/[^
-\d.-]/g, '')) || 0;
+  const startValue = Number(String(element.textContent).replace(/[^\d.-]/g, '')) || 0;
   const startTime = performance.now();
 
   function step(now) {
@@ -279,8 +278,8 @@ function setAppImportState(enabled) {
 
   if (appImportNote) {
     appImportNote.textContent = enabled
-      ? 'Send these calculated targets straight into the MacroLogger app.'
-      : 'Calculate your targets first, then open them in MacroLogger.';
+      ? 'Save these calculated targets for the MacroLogger app.'
+      : 'Calculate your targets first, then save them for the MacroLogger app.';
   }
 }
 
@@ -310,11 +309,20 @@ function buildMacroLoggerDeepLink(result) {
 function buildMacroLogicClipboardText(result) {
   if (!result) return '';
 
+  const calories = Number(result.calories);
+  const protein = Number(result.protein);
+  const carbs = Number(result.carbs);
+  const fats = Number(result.fats);
+
+  // Strict whole-number payload only.
+  const allWhole = [calories, protein, carbs, fats].every((v) => Number.isFinite(v) && Number.isInteger(v));
+  if (!allWhole) return '';
+
   return [
-    `Calories: ${result.calories}`,
-    `Protein: ${result.protein}g`,
-    `Carbs: ${result.carbs}g`,
-    `Fat: ${result.fats}g`,
+    `Calories: ${calories}`,
+    `Protein: ${protein}g`,
+    `Carbs: ${carbs}g`,
+    `Fat: ${fats}g`,
   ].join('\n');
 }
 
@@ -349,9 +357,11 @@ async function copyTargetsFallback(result) {
 }
 
 async function openMacroLoggerImport(result) {
-  const deepLink = buildMacroLoggerDeepLink(result);
-  if (!deepLink) {
-    alert('Calculate your targets first before sending them to MacroLogger.');
+  const clipboardText = buildMacroLogicClipboardText(result);
+  if (!clipboardText) {
+    if (appImportNote) {
+      appImportNote.textContent = "Calculate your targets first before saving them for MacroLogger.";
+    }
     return;
   }
 
@@ -359,11 +369,9 @@ async function openMacroLoggerImport(result) {
 
   if (appImportNote) {
     appImportNote.textContent = clipboardCopied
-      ? 'Opening MacroLogger… your targets were also copied as a fallback.'
-      : 'Opening MacroLogger…';
+      ? 'Targets saved for MacroLogger. Return to the app to import them.'
+      : "Couldn’t save targets automatically. Please copy them manually.";
   }
-
-  window.location.href = deepLink;
 }
 
 function updateResults(result, data) {
@@ -405,7 +413,10 @@ function updateResults(result, data) {
   resultsCard.classList.add('flash');
 
   state.lastResult = { ...result, ...data };
-  setAppImportState(true);
+
+  // Enable button only when we can build a strict clipboard payload.
+  const clipboardText = buildMacroLogicClipboardText(result);
+  setAppImportState(Boolean(clipboardText));
 }
 
 function openModal() {

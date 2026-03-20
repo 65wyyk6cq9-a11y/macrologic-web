@@ -14,8 +14,7 @@ function animateNumber(element, endValue, suffix = '', duration = 900) {
     return;
   }
 
-  const startValue = Number(String(element.textContent).replace(/[^
-\d.-]/g, '')) || 0;
+  const startValue = Number(String(element.textContent).replace(/[^\d.-]/g, '')) || 0;
   const startTime = performance.now();
 
   function step(now) {

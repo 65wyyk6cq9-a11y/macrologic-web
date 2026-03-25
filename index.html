@@ -127,10 +127,14 @@
               <label for="trainingFrequency">Training Frequency</label>
               <select id="trainingFrequency" name="trainingFrequency" required>
                 <option value="0">No structured training</option>
-                <option value="1">Light training — 1 to 2 days/week</option>
-                <option value="2">Moderate training — 3 to 4 days/week</option>
-                <option value="3" selected>Heavy training — 6 to 7 days/week</option>
-                <option value="4">Athlete — twice daily / very high volume</option>
+                <option value="1">Train 1 day/week</option>
+                <option value="2">Train 2 days/week</option>
+                <option value="3">Train 3 days/week</option>
+                <option value="4">Train 4 days/week</option>
+                <option value="5" selected>Train 5 days/week</option>
+                <option value="6">Train 6 days/week</option>
+                <option value="7">Train 7 days/week</option>
+                <option value="8">Athlete — twice daily / very high volume</option>
               </select>
             </div>
           </div>
@@ -252,7 +256,7 @@
 
           <div class="actions-row result-actions">
             <button type="button" class="primary-btn" id="downloadPdfBtn">Download PDF</button>
-            <button type="button" class="ghost-btn" id="openInAppBtn">Save for MacroLogger app</button>
+            <button type="button" class="ghost-btn hidden" id="openInAppBtn">Save for MacroLogger app</button>
           </div>
           <p class="form-note app-import-note" id="appImportNote">Calculate your targets first, then save them for the MacroLogger app.</p>
 
@@ -292,6 +296,19 @@
         Results are for informational purposes only and should be adjusted based on progress,
         recovery, performance, and professional guidance where needed.
       </p>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="clipboardModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="clipboard-modal"></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="clipboardModalTitle">
+      <button class="modal-close" id="closeClipboardModalBtn" aria-label="Close">×</button>
+      <p class="section-kicker">MacroLogger</p>
+      <h3 id="clipboardModalTitle">Copied to clipboard</h3>
+      <p>Your macro targets are saved. Return to MacroLogger to continue.</p>
+      <div class="actions-row" style="margin-top: 18px;">
+        <button type="button" class="primary-btn" id="clipboardModalOkBtn">OK</button>
+      </div>
     </div>
   </div>
   <script defer src="/_vercel/insights/script.js"></script>
